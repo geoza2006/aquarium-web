@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquarium Fish Info</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+        }
+        .carousel-img { 
+            width: 100%; height: 300px; object-fit: cover; border-radius: 16px; 
+        }
+        #loader {
+            position: fixed; inset: 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<!-- ปรับพื้นหลังให้เป็นสีไล่ระดับ (Gradient) ธีมใต้น้ำสีสันสดใส -->
+<body class="p-4 flex flex-col items-center min-h-screen justify-center bg-gradient-to-br from-cyan-600 via-blue-800 to-indigo-900 text-white">
+
+    <div id="loader" class="bg-blue-900">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <p class="mt-4 font-semibold text-xl">กำลังดำน้ำหาข้อมูล...</p>
+    </div>
+
+    <!-- กรอบเนื้อหา: ปรับให้เป็นสไตล์กระจกใส (Glassmorphism) -->
+    <div id="content" class="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-5 border border-white/20 hidden">
+        
+        <div class="relative">
+            <img id="fishImage" src="" alt="รูปปลา" class="carousel-img shadow-lg border-2 border-white/30">
+            
+            <!-- ปุ่มลูกศร ซ้าย-ขวา -->
+            <button onclick="prevImage()" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button onclick="nextImage()" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- จุดไข่ปลา -->
+            <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-2" id="indicators"></div>
+        </div>
+        
+        <div class="text-center mt-6">
+            <!-- สีตัวหนังสือปรับให้เด่นชัดและมีสีสัน -->
+            <h1 id="fishNameTh" class="text-3xl font-bold text-yellow-300 drop-shadow-md">ชื่อไทย</h1>
+            <h2 id="fishNameEn" class="text-xl text-cyan-200 mt-1">English Name</h2>
+            <h3 id="fishNameSci" class="text-sm text-blue-200 italic mt-1 bg-black/20 inline-block px-3 py-1 rounded-full">Scientific Name</h3>
+        </div>
+        
+        <!-- ปุ่มกดฟังเสียง (เหลือแค่ 2 ปุ่ม และปรับสีให้สดใส) -->
+        <div class="mt-8 flex flex-col gap-3">
+            <button onclick="toggleAudio('thSound')" id="btn-thSound" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg">
+                <i class="fas fa-volume-up text-2xl"></i>
+                <span class="text-lg">ฟังเสียงบรรยาย (ไทย)</span>
+            </button>
+            
+            <button onclick="toggleAudio('enSound')" id="btn-enSound" class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white font-bold py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg">
+                <i class="fas fa-volume-up text-2xl"></i>
+                <span class="text-lg">English Audio</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ไฟล์เสียง -->
+    <audio id="thSound" src=""></audio>
+    <audio id="enSound" src=""></audio>
+
+    <script>
+        // *** เอาลิงก์ CSV ของคุณมาใส่ตรงนี้ ***
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWbNNWdqrSFLb_5HG40EwM0ot6SvcOMbyIULRLI3scF2MBO86-u9kZbeVPTLPh29tiIFjyLkIoTxO_/pub?gid=0&single=true&output=csv";
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('id') || "001"; 
+
+        // ตัวแปรสำหรับระบบเลื่อนรูป
+        let currentImages = [];
+        let currentImageIndex = 0;
+        const imgElement = document.getElementById('fishImage');
+        const indicatorsContainer = document.getElementById('indicators');
+
+        Papa.parse(SHEET_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const fishData = results.data;
+                const fish = fishData.find(item => item.id === targetId);
+
+                if (fish) {
+                    document.getElementById('fishNameTh').innerText = fish.name_th || "ไม่มีข้อมูล";
+                    document.getElementById('fishNameEn').innerText = fish.name_en || "-";
+                    document.getElementById('fishNameSci').innerText = fish.name_sci || "-";
+                    
+                    document.getElementById('thSound').src = fish.sound_th || "";
+                    document.getElementById('enSound').src = fish.sound_en || ""; // ตรวจสอบว่าในชีตใช้ชื่อ sound_en หรือเปล่า
+
+                    // จัดการรูปภาพ (ถ้ามีคอลัมน์ image_1, image_2, image_3)
+                    if (fish.image_1) currentImages.push(fish.image_1);
+                    if (fish.image_2) currentImages.push(fish.image_2);
+                    if (fish.image_3) currentImages.push(fish.image_3);
+
+                    // ถ้าไม่มีรูปใน image_1-3 เลย ให้ใช้รูปสำรอง (ป้องกันเว็บพัง)
+                    if (currentImages.length === 0) {
+                        currentImages.push("https://images.unsplash.com/photo-1524704654690-b56c05c78a00");
+                    }
+
+                    updateImage();
+
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('content').classList.remove('hidden');
+                } else {
+                    document.getElementById('loader').innerHTML = '<p class="text-red-300 text-xl font-bold bg-white/20 px-4 py-2 rounded-xl backdrop-blur-sm">ไม่พบข้อมูลปลา กรุณาสแกน QR Code ใหม่อีกครั้ง</p>';
+                }
+            }
+        });
+
+        // ฟังก์ชันระบบเลื่อนรูป
+        function updateImage() {
+            imgElement.src = currentImages[currentImageIndex];
+            indicatorsContainer.innerHTML = '';
+            
+            // ซ่อนปุ่มและจุดไข่ปลา ถ้ารูปมีแค่ 1 รูป
+            if (currentImages.length > 1) {
+                currentImages.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = `w-2.5 h-2.5 rounded-full shadow-md ${index === currentImageIndex ? 'bg-white' : 'bg-white/40'}`;
+                    indicatorsContainer.appendChild(dot);
+                });
+            } else {
+                document.querySelectorAll('.fa-chevron-left, .fa-chevron-right').forEach(btn => btn.parentElement.style.display = 'none');
+            }
+        }
+
+        function prevImage() {
+            if (currentImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex === 0) ? currentImages.length - 1 : currentImageIndex - 1;
+            updateImage();
+        }
+
+        function nextImage() {
+            if (currentImages.length <= 1) return;
+            currentImageIndex = (currentImageIndex === currentImages.length - 1) ? 0 : currentImageIndex + 1;
+            updateImage();
+        }
+
+        // ระบบควบคุมเสียง
+        function toggleAudio(id) {
+            const audio = document.getElementById(id);
+            const button = document.getElementById(`btn-${id}`);
+            const allAudios = ['thSound', 'enSound'];
+
+            if (!audio.src || audio.src === window.location.href) {
+                alert("ขออภัยครับ ยังไม่มีไฟล์เสียงบรรยายสำหรับปลาชนิดนี้");
+                return;
+            }
+
+            allAudios.forEach(audioId => {
+                if (audioId !== id) {
+                    const otherAudio = document.getElementById(audioId);
+                    otherAudio.pause();
+                    otherAudio.currentTime = 0;
+                    resetButtonStyle(audioId);
+                }
+            });
+
+            if (audio.paused) {
+                audio.play();
+                button.classList.add('ring-4', 'ring-white');
+            } else {
+                audio.pause();
+                resetButtonStyle(id);
+            }
+            audio.onended = () => resetButtonStyle(id);
+        }
+
+        function resetButtonStyle(id) {
+            const button = document.getElementById(`btn-${id}`);
+            if(button) button.classList.remove('ring-4', 'ring-white');
+        }
+    </script>
+</body>
+</html>
