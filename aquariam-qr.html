@@ -21,7 +21,6 @@
         }
     </style>
 </head>
-<!-- ปรับพื้นหลังให้เป็นสีไล่ระดับ (Gradient) ธีมใต้น้ำสีสันสดใส -->
 <body class="p-4 flex flex-col items-center min-h-screen justify-center bg-gradient-to-br from-cyan-600 via-blue-800 to-indigo-900 text-white">
 
     <div id="loader" class="bg-blue-900">
@@ -29,13 +28,11 @@
         <p class="mt-4 font-semibold text-xl">กำลังดำน้ำหาข้อมูล...</p>
     </div>
 
-    <!-- กรอบเนื้อหา: ปรับให้เป็นสไตล์กระจกใส (Glassmorphism) -->
     <div id="content" class="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-5 border border-white/20 hidden">
         
         <div class="relative">
             <img id="fishImage" src="" alt="รูปปลา" class="carousel-img shadow-lg border-2 border-white/30">
             
-            <!-- ปุ่มลูกศร ซ้าย-ขวา -->
             <button onclick="prevImage()" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm">
                 <i class="fas fa-chevron-left"></i>
             </button>
@@ -43,18 +40,15 @@
                 <i class="fas fa-chevron-right"></i>
             </button>
             
-            <!-- จุดไข่ปลา -->
             <div class="absolute bottom-3 left-0 right-0 flex justify-center gap-2" id="indicators"></div>
         </div>
         
         <div class="text-center mt-6">
-            <!-- สีตัวหนังสือปรับให้เด่นชัดและมีสีสัน -->
             <h1 id="fishNameTh" class="text-3xl font-bold text-yellow-300 drop-shadow-md">ชื่อไทย</h1>
             <h2 id="fishNameEn" class="text-xl text-cyan-200 mt-1">English Name</h2>
             <h3 id="fishNameSci" class="text-sm text-blue-200 italic mt-1 bg-black/20 inline-block px-3 py-1 rounded-full">Scientific Name</h3>
         </div>
         
-        <!-- ปุ่มกดฟังเสียง (เหลือแค่ 2 ปุ่ม และปรับสีให้สดใส) -->
         <div class="mt-8 flex flex-col gap-3">
             <button onclick="toggleAudio('thSound')" id="btn-thSound" class="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold py-4 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg">
                 <i class="fas fa-volume-up text-2xl"></i>
@@ -68,18 +62,15 @@
         </div>
     </div>
 
-    <!-- ไฟล์เสียง -->
     <audio id="thSound" src=""></audio>
     <audio id="enSound" src=""></audio>
 
     <script>
-        // *** เอาลิงก์ CSV ของคุณมาใส่ตรงนี้ ***
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTWbNNWdqrSFLb_5HG40EwM0ot6SvcOMbyIULRLI3scF2MBO86-u9kZbeVPTLPh29tiIFjyLkIoTxO_/pub?gid=0&single=true&output=csv";
 
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('id') || "001"; 
 
-        // ตัวแปรสำหรับระบบเลื่อนรูป
         let currentImages = [];
         let currentImageIndex = 0;
         const imgElement = document.getElementById('fishImage');
@@ -100,12 +91,10 @@
                     document.getElementById('thSound').src = fish.sound_th || "";
                     document.getElementById('enSound').src = fish.sound_en || ""; // ตรวจสอบว่าในชีตใช้ชื่อ sound_en หรือเปล่า
 
-                    // จัดการรูปภาพ (ถ้ามีคอลัมน์ image_1, image_2, image_3)
                     if (fish.image_1) currentImages.push(fish.image_1);
                     if (fish.image_2) currentImages.push(fish.image_2);
                     if (fish.image_3) currentImages.push(fish.image_3);
 
-                    // ถ้าไม่มีรูปใน image_1-3 เลย ให้ใช้รูปสำรอง (ป้องกันเว็บพัง)
                     if (currentImages.length === 0) {
                         currentImages.push("https://images.unsplash.com/photo-1524704654690-b56c05c78a00");
                     }
@@ -120,12 +109,10 @@
             }
         });
 
-        // ฟังก์ชันระบบเลื่อนรูป
         function updateImage() {
             imgElement.src = currentImages[currentImageIndex];
             indicatorsContainer.innerHTML = '';
             
-            // ซ่อนปุ่มและจุดไข่ปลา ถ้ารูปมีแค่ 1 รูป
             if (currentImages.length > 1) {
                 currentImages.forEach((_, index) => {
                     const dot = document.createElement('div');
@@ -149,7 +136,6 @@
             updateImage();
         }
 
-        // ระบบควบคุมเสียง
         function toggleAudio(id) {
             const audio = document.getElementById(id);
             const button = document.getElementById(`btn-${id}`);
