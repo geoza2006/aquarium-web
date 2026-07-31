@@ -1,48 +1,60 @@
 # Aquarium QR
 
-A QR-powered information system for aquarium exhibits.
+A simple web-based QR information system for aquarium exhibits.
 
-Instead of reading printed labels, visitors can scan a QR code to view species information directly on their phone. Each page includes common names, scientific names, descriptions, habitat information, and images in a mobile-friendly interface.
+Visitors can scan a QR code to instantly open a web page displaying information about the fish instead of opening audio files directly. The page provides basic species information together with audio narration in both Thai and English.
 
 ## Features
 
-* QR code access for each exhibit
-* Thai and English species names
-* Scientific names
-* Species information pages
-* Responsive design
-* Admin-friendly content management
+- Scan QR codes to open species pages
+- Fish image
+- Thai name
+- English name
+- Scientific name
+- Audio narration in Thai
+- Audio narration in English
+- Mobile-friendly interface
 
 ## Tech Stack
 
-* HTML
-* CSS
-* Js
+- HTML
+- CSS
+- JavaScript
 
-## Development
+## Project Background
+
+This project was inspired by an existing aquarium QR code system.
+
+In the previous system, scanning a QR code opened two separate audio files stored on Google Drive for Thai and English narration. This project redesigns that experience by replacing it with a simple web page where visitors can view the fish image, names, and play audio directly from the browser, making the experience more convenient and user-friendly.
+
+## Project Structure
+
+```
+/
+├── index.html
+├── css/
+├── js/
+├── images/
+├── audio/
+└── data/
+```
+
+## Getting Started
+
+Clone the repository and open `index.html` in your browser.
 
 ```bash
 git clone https://github.com/your-username/aquarium-qr.git
-
-cd aquarium-qr
-
-npm install
-
-npm run dev
 ```
-
-## Why this project?
-
-Aquarium exhibits often rely on printed information boards that are difficult to update and limited by physical space. This project explores a digital alternative using QR codes, making content easier to maintain while providing visitors with richer and more accessible information.
 
 ## Future Improvements
 
-* Search by species
-* Interactive aquarium map
-* Multi-language support
-* Favorite exhibits
-* Analytics dashboard
+- More species information
+- Search functionality
+- Additional language support
+- Better UI/UX
+- Offline support
 
 ---
 
-Built for aquarium visitors who want to learn more with a single scan.
+Built with HTML, CSS and JavaScript.
